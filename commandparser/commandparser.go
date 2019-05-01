@@ -10,6 +10,10 @@ type CommandParser struct {
 	booleans []string
 }
 
+func New() CommandParser {
+	return CommandParser{}
+}
+
 func (parser *CommandParser) AddBoolean(key ...string) *CommandParser {
 	parser.booleans = append(parser.booleans, key...)
 	return parser

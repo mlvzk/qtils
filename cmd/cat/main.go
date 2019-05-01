@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	parser := commandparser.CommandParser{}
+	parser := commandparser.New()
 	parser.AddBoolean("show-ends")
 
 	command := parser.Parse(os.Args)
