@@ -54,5 +54,10 @@ func (proxy ShowEndsProxy) Write(bytes []byte) (int, error) {
 		}
 	}
 
+	if pos < len(bytes) {
+		proxy.original.Write(bytes[pos:])
+		pos = len(bytes)
+	}
+
 	return pos, nil
 }
