@@ -100,7 +100,9 @@ func (proxy numberProxy) Write(bytes []byte) (int, error) {
 	}
 
 	if pos < len(bytes) {
-		proxy.original.Write(bytes[pos:])
+		line := append([]byte(leftPad(strconv.Itoa(proxy.lineNum), " ", 5)+"\t"), bytes[pos:]...)
+		proxy.original.Write(line)
+		proxy.lineNum++
 		pos = len(bytes)
 	}
 
