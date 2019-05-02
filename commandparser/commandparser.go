@@ -8,20 +8,30 @@ type Command struct {
 
 type CommandParser struct {
 	booleans []string
+	aliases  map[string]string
 }
 
 func New() CommandParser {
-	return CommandParser{}
+	return CommandParser{
+		[]string{},
+		map[string]string{},
+	}
 }
 
-func (parser *CommandParser) AddBoolean(key ...string) *CommandParser {
+func (parser *CommandParser) AddBoolean(key ...string) {
 	parser.booleans = append(parser.booleans, key...)
-	return parser
+}
+
+func (parser *CommandParser) AddAliases(from string, to ...string) {
+	for _, t := range to {
+		parser.aliases[t] = from
+	}
 }
 
 func (parser *CommandParser) isBoolean(key string) bool {
 	for _, boolKey := range parser.booleans {
-		if boolKey == key {
+		alias, _ := parser.aliases[key]
+		if boolKey == key || boolKey == alias {
 			return true
 		}
 	}
@@ -42,13 +52,18 @@ func (parser CommandParser) Parse(argv []string) Command {
 				key = argv[i][1:]
 			}
 
-			if parser.isBoolean(key) { // don't progress if key is boolean
+			alias, hasAlias := parser.aliases[key]
+			if hasAlias { // convert aliased key to original key
+				key = alias
+			}
+
+			if parser.isBoolean(key) {
 				arguments[key] = "1"
 			} else {
 				arguments[key] = argv[i+1]
 				i++
 			}
-		} else { // positional
+		} else {
 			positionals = append(positionals, argv[i])
 		}
 	}
