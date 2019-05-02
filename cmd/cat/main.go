@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"log"
 	"os"
@@ -19,7 +20,10 @@ func rightPad(s string, padStr string, pLen int) string {
 
 func main() {
 	parser := commandparser.New()
-	parser.AddBoolean("show-ends", "number")
+	parser.AddBoolean("show-ends")
+	parser.AddAliases("show-ends", "E")
+	parser.AddBoolean("number")
+	parser.AddAliases("number", "n")
 
 	command := parser.Parse(os.Args)
 
@@ -56,23 +60,26 @@ func newShowEndsProxy(original io.Writer) showEndsProxy {
 	}
 }
 
-func (proxy showEndsProxy) Write(bytes []byte) (int, error) {
+func (proxy showEndsProxy) Write(p []byte) (int, error) {
 	var pos int
 
-	for i, b := range bytes {
+	buffer := bytes.Buffer{}
+	buffer.Grow(len(p))
+	for i, b := range p {
 		if b == '\n' {
-			line := append(bytes[pos:i], []byte("$\n")...)
-			proxy.original.Write(line)
+			buffer.Write(p[pos:i])
+			buffer.Write([]byte("$\n"))
 			pos = i + 1
 		}
 	}
 
-	if pos < len(bytes) {
-		proxy.original.Write(bytes[pos:])
-		pos = len(bytes)
+	if pos < len(p) {
+		buffer.Write(p[pos:])
+		pos = len(p)
 	}
 
-	return pos, nil
+	buffer.WriteTo(proxy.original)
+	return len(p), nil
 }
 
 type numberProxy struct {
