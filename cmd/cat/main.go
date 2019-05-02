@@ -61,8 +61,8 @@ func (proxy showEndsProxy) Write(bytes []byte) (int, error) {
 
 	for i, b := range bytes {
 		if b == '\n' {
-			proxy.original.Write(bytes[pos:i])
-			proxy.original.Write([]byte("$\n"))
+			line := append(bytes[pos:i], []byte("$\n")...)
+			proxy.original.Write(line)
 			pos = i + 1
 		}
 	}
