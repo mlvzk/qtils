@@ -28,10 +28,10 @@ func main() {
 
 	var output io.Writer = os.Stdout
 	if showEnds {
-		output = NewShowEndsProxy(output)
+		output = newShowEndsProxy(output)
 	}
 	if number {
-		output = NewNumberProxy(output)
+		output = newNumberProxy(output)
 	}
 
 	for _, arg := range command.Positionals {
@@ -46,17 +46,17 @@ func main() {
 	}
 }
 
-type ShowEndsProxy struct {
+type showEndsProxy struct {
 	original io.Writer
 }
 
-func NewShowEndsProxy(original io.Writer) ShowEndsProxy {
-	return ShowEndsProxy{
+func newShowEndsProxy(original io.Writer) showEndsProxy {
+	return showEndsProxy{
 		original,
 	}
 }
 
-func (proxy ShowEndsProxy) Write(bytes []byte) (int, error) {
+func (proxy showEndsProxy) Write(bytes []byte) (int, error) {
 	var pos int
 
 	for i, b := range bytes {
@@ -75,19 +75,19 @@ func (proxy ShowEndsProxy) Write(bytes []byte) (int, error) {
 	return pos, nil
 }
 
-type NumberProxy struct {
+type numberProxy struct {
 	original io.Writer
 	lineNum  int
 }
 
-func NewNumberProxy(original io.Writer) NumberProxy {
-	return NumberProxy{
+func newNumberProxy(original io.Writer) numberProxy {
+	return numberProxy{
 		original,
 		1,
 	}
 }
 
-func (proxy NumberProxy) Write(bytes []byte) (int, error) {
+func (proxy numberProxy) Write(bytes []byte) (int, error) {
 	var pos int
 
 	for i, b := range bytes {
