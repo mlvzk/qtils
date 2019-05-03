@@ -21,6 +21,7 @@ func main() {
 	parser.AddAliases("number", "n")
 	parser.AddBoolean("show-nonprinting")
 	parser.AddAliases("show-nonprinting", "v")
+	// TODO: implement cat --squeeze-blank
 
 	command := parser.Parse(os.Args)
 
