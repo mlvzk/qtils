@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/mlvzk/qtils/commandparser"
 )
@@ -24,11 +26,14 @@ func main() {
 	parser.AddAliases("show-ends", "E")
 	parser.AddBoolean("number")
 	parser.AddAliases("number", "n")
+	parser.AddBoolean("show-nonprinting")
+	parser.AddAliases("show-nonprinting", "v")
 
 	command := parser.Parse(os.Args)
 
 	_, showEnds := command.Args["show-ends"]
 	_, number := command.Args["number"]
+	_, showNonprinting := command.Args["show-nonprinting"]
 
 	var output io.Writer = os.Stdout
 	if showEnds {
@@ -37,15 +42,29 @@ func main() {
 	if number {
 		output = newNumberProxy(output)
 	}
+	if showNonprinting {
+		output = newShowNonprintingProxy(output)
+	}
 
 	for _, arg := range command.Positionals {
-		file, err := os.Open(arg)
-		if err != nil {
-			log.Fatalf("Open file '%s' error: %v\n", arg, err)
+		var file *os.File
+		var err error
+		if arg == "-" {
+			file = os.Stdin
+		} else {
+			if file, err = os.Open(arg); err != nil {
+				log.Fatalf("Open file '%s' error: %v\n", arg, err)
+			}
 		}
 
-		if _, err = io.Copy(output, file); err != nil {
+		if _, err := io.Copy(output, file); err != nil {
 			log.Fatalf("Copying file '%s' error: %v\n", arg, err)
+		}
+	}
+
+	if len(command.Positionals) == 0 {
+		if _, err := io.Copy(output, os.Stdin); err != nil {
+			log.Fatalf("Copying from stdin error: %v\n", err)
 		}
 	}
 }
@@ -78,7 +97,11 @@ func (proxy showEndsProxy) Write(p []byte) (int, error) {
 		pos = len(p)
 	}
 
-	buffer.WriteTo(proxy.original)
+	_, err := buffer.WriteTo(proxy.original)
+	if err != nil {
+		return 0, err
+	}
+
 	return len(p), nil
 }
 
@@ -114,4 +137,43 @@ func (proxy numberProxy) Write(bytes []byte) (int, error) {
 	}
 
 	return pos, nil
+}
+
+type showNonprintingProxy struct {
+	original io.Writer
+}
+
+func newShowNonprintingProxy(original io.Writer) showNonprintingProxy {
+	return showNonprintingProxy{
+		original,
+	}
+}
+
+func (proxy showNonprintingProxy) Write(p []byte) (int, error) {
+	buffer := bytes.Buffer{}
+	buffer.Grow(len(p))
+	for _, b := range p {
+		if b >= utf8.RuneSelf { // not ascii
+			buffer.Write([]byte("M-"))
+			b = b & 0x7f // toascii
+		}
+
+		if unicode.IsControl(rune(b)) {
+			buffer.WriteByte('^')
+			if b == '\177' {
+				b = '?'
+			} else {
+				b = b | 0100
+			}
+		}
+
+		buffer.WriteByte(b)
+	}
+
+	_, err := buffer.WriteTo(proxy.original)
+	if err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
 }
