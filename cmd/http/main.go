@@ -69,9 +69,9 @@ func main() {
 			if filePath == "-" {
 				reader = os.Stdin
 			} else {
-				reader, err = os.Open(command.Positionals[2])
+				reader, err = os.Open(filePath)
 				if err != nil {
-					log.Fatalf("Error opening the file %v ; Error: %v", command.Positionals[2], err)
+					log.Fatalf("Error opening the file %v ; Error: %v", filePath, err)
 				}
 			}
 		}
