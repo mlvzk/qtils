@@ -1,0 +1,26 @@
+language: go
+go: 1.12.x
+matrix:
+  fast_finish: true
+  include:
+  - os: linux
+  - os: osx
+    env: SUFFIX=-macos
+  - os: windows
+    env: SUFFIX=.exe
+env:
+  global:
+    - CGO_ENABLED=0
+before_deploy:
+  - mkdir -p result
+  - find cmd -maxdepth 1 -type d | sed 1d | xargs -n1 -I'{}' go build -a -ldflags="-s -w" -installsuffix "static" -o "result/{}$SUFFIX" "{}/main.go"
+deploy:
+  provider: releases
+  api_key:
+    secure: XDbjXAcu2EFytf2UREICUSRwYsapMo+2QJO/iG4AeB269NFSCo0JWKSpaLTvrW/xedvtBJ4ql6t8zXaYmdrIuSGcaZXQWpCjO3qUPGjk8fggLx+/+9auGA3lvz3Kp0d36nKFVaHsWJdQmha1G+eZ8fmYiW15MB00xSD03e1gQ0YLt07vCW7TBQd3SxhX5L2BCfOARh1JdH8ldISRyK10ecM1p8uwrR9GiSVjoMbL4iAxS5t/iLkg20/PuAV1BR+aYJLu0xLmwAtaWalm4GnP5YDCegFYuUvr2qsEx/UYL9o4KVn+wEHWHNtXQauZhtdsdmODrD04EqrgPTzWS5ndBIPYA8KiRWgQBwYG3yCNri3ATcJHUKrHxS106CpeN97T0Q8y9MbEyZw5E52WcUG8pyUrv3luLKp5/0D2iRhFvv7iw6OiqIxttZ3XCBJo+njc9XLBFSX8I16F/geuHxb9UiXw6YgkwlZjFDspyM+w44O3Itba0mvzS3HtrIsi9B9M8JvwSWOxyNCS9cZwnNuyN9bc6UkAsyIcZWosDR3swZblwIlNmP3lfD+1+i9Iq0jt/MICj8b0wSArYtQGBtjvcQp6DfYHb3Ci/eqfhr/FakK8EkM8K2zlUAoUf8bp8nJkHZvN7/tjx9TWwF3R861plIvqx6npMQDXjG/Rbgw/bTA=
+  skip_cleanup: true
+  file_glob: true
+  file: result/cmd/*
+  on:
+    repo: mlvzk/qtils
+    tags: true
