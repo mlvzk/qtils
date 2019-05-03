@@ -6,19 +6,12 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/mlvzk/qtils/commandparser"
+	"github.com/mlvzk/qtils/util"
 )
-
-func leftPad(s string, padStr string, pLen int) string {
-	return strings.Repeat(padStr, pLen) + s
-}
-func rightPad(s string, padStr string, pLen int) string {
-	return s + strings.Repeat(padStr, pLen)
-}
 
 func main() {
 	parser := commandparser.New()
@@ -122,7 +115,7 @@ func (proxy numberProxy) Write(bytes []byte) (int, error) {
 
 	for i, b := range bytes {
 		if b == '\n' {
-			line := append([]byte(leftPad(strconv.Itoa(proxy.lineNum), " ", 5)+"\t"), bytes[pos:i+1]...)
+			line := append([]byte(util.LeftPad(strconv.Itoa(proxy.lineNum), " ", 5)+"\t"), bytes[pos:i+1]...)
 			proxy.original.Write(line)
 			proxy.lineNum++
 			pos = i + 1
@@ -130,7 +123,7 @@ func (proxy numberProxy) Write(bytes []byte) (int, error) {
 	}
 
 	if pos < len(bytes) {
-		line := append([]byte(leftPad(strconv.Itoa(proxy.lineNum), " ", 5)+"\t"), bytes[pos:]...)
+		line := append([]byte(util.LeftPad(strconv.Itoa(proxy.lineNum), " ", 5)+"\t"), bytes[pos:]...)
 		proxy.original.Write(line)
 		proxy.lineNum++
 		pos = len(bytes)
