@@ -3,16 +3,19 @@ package commandparser
 type Command struct {
 	Exe         string
 	Args        map[string]string
+	Arrayed     map[string][]string
 	Positionals []string
 }
 
 type CommandParser struct {
 	booleans []string
+	arrayed  []string
 	aliases  map[string]string
 }
 
 func New() CommandParser {
 	return CommandParser{
+		[]string{},
 		[]string{},
 		map[string]string{},
 	}
@@ -20,6 +23,10 @@ func New() CommandParser {
 
 func (parser *CommandParser) AddBoolean(key ...string) {
 	parser.booleans = append(parser.booleans, key...)
+}
+
+func (parser *CommandParser) AddArrayed(key ...string) {
+	parser.arrayed = append(parser.arrayed, key...)
 }
 
 func (parser *CommandParser) AddAliases(from string, to ...string) {
@@ -39,9 +46,20 @@ func (parser *CommandParser) isBoolean(key string) bool {
 	return false
 }
 
+func (parser *CommandParser) isArrayed(key string) bool {
+	for _, arrayKey := range parser.arrayed {
+		if arrayKey == key {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (parser CommandParser) Parse(argv []string) Command {
 	arguments := map[string]string{}
 	positionals := []string{}
+	arrayed := map[string][]string{}
 
 	for i := 1; i < len(argv); i++ {
 		if argv[i][0] == '-' && len(argv[i]) > 1 {
@@ -59,6 +77,9 @@ func (parser CommandParser) Parse(argv []string) Command {
 
 			if parser.isBoolean(key) {
 				arguments[key] = "1"
+			} else if parser.isArrayed(key) {
+				arrayed[key] = append(arrayed[key], argv[i+1])
+				i++
 			} else {
 				arguments[key] = argv[i+1]
 				i++
@@ -71,6 +92,7 @@ func (parser CommandParser) Parse(argv []string) Command {
 	return Command{
 		Exe:         argv[0],
 		Args:        arguments,
+		Arrayed:     arrayed,
 		Positionals: positionals,
 	}
 }
