@@ -4,6 +4,7 @@ type Command struct {
 	Exe         string
 	Args        map[string]string
 	Arrayed     map[string][]string
+	Booleans    map[string]bool
 	Positionals []string
 }
 
@@ -13,23 +14,42 @@ type CommandParser struct {
 	aliases  map[string]string
 }
 
-func New() CommandParser {
-	return CommandParser{
+func New() *CommandParser {
+	return &CommandParser{
 		[]string{},
 		[]string{},
 		map[string]string{},
 	}
 }
 
-func (parser *CommandParser) AddBoolean(key ...string) {
+type Option interface {
+	GetKey() string
+	GetAliases() []string
+	IsBoolean() bool
+	IsArrayed() bool
+}
+
+func (parser *CommandParser) AddOption(options ...Option) {
+	for _, option := range options {
+		parser.addAliases(option.GetKey(), option.GetAliases()...)
+		if option.IsBoolean() {
+			parser.addBoolean(option.GetKey())
+		}
+		if option.IsArrayed() {
+			parser.addArrayed(option.GetKey())
+		}
+	}
+}
+
+func (parser *CommandParser) addBoolean(key ...string) {
 	parser.booleans = append(parser.booleans, key...)
 }
 
-func (parser *CommandParser) AddArrayed(key ...string) {
+func (parser *CommandParser) addArrayed(key ...string) {
 	parser.arrayed = append(parser.arrayed, key...)
 }
 
-func (parser *CommandParser) AddAliases(from string, to ...string) {
+func (parser *CommandParser) addAliases(from string, to ...string) {
 	for _, t := range to {
 		parser.aliases[t] = from
 	}
@@ -56,10 +76,11 @@ func (parser *CommandParser) isArrayed(key string) bool {
 	return false
 }
 
-func (parser CommandParser) Parse(argv []string) Command {
+func (parser *CommandParser) Parse(argv []string) *Command {
 	arguments := map[string]string{}
 	positionals := []string{}
 	arrayed := map[string][]string{}
+	booleans := map[string]bool{}
 
 	for i := 1; i < len(argv); i++ {
 		if argv[i][0] == '-' && len(argv[i]) > 1 {
@@ -75,11 +96,13 @@ func (parser CommandParser) Parse(argv []string) Command {
 				key = alias
 			}
 
-			if parser.isBoolean(key) {
-				arguments[key] = "1"
+			if parser.isBoolean(key) && parser.isArrayed(key) {
+				arrayed[key] = append(arrayed[key], "1")
 			} else if parser.isArrayed(key) {
 				arrayed[key] = append(arrayed[key], argv[i+1])
 				i++
+			} else if parser.isBoolean(key) {
+				booleans[key] = true
 			} else {
 				arguments[key] = argv[i+1]
 				i++
@@ -89,10 +112,11 @@ func (parser CommandParser) Parse(argv []string) Command {
 		}
 	}
 
-	return Command{
+	return &Command{
 		Exe:         argv[0],
 		Args:        arguments,
 		Arrayed:     arrayed,
+		Booleans:    booleans,
 		Positionals: positionals,
 	}
 }

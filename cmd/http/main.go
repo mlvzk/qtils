@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -9,19 +10,66 @@ import (
 	"strings"
 
 	"github.com/mlvzk/qtils/commandparser"
+	"github.com/mlvzk/qtils/commandparser/commandhelper"
 )
 
 func main() {
 	parser := commandparser.New()
-	parser.AddAliases("port", "p")
-	parser.AddArrayed("header")
-	parser.AddAliases("header", "h", "H")
+	helper := commandhelper.New()
+
+	helper.SetName("http")
+	helper.SetVersion("v0.1.0")
+	helper.AddAuthors("mlvzk")
+
+	parser.AddOption(helper.EatOption(
+		commandhelper.
+			NewOption("port").
+			Alias("p").
+			// Default("3434").
+			Required().
+			Description("Port which the file server will listen on").
+			Build(),
+		commandhelper.
+			NewOption("header").
+			Alias("H").
+			Arrayed().
+			Description("Header that will be sent with the request. Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'").
+			Build(),
+		commandhelper.
+			NewOption("verbose").
+			Alias("v").
+			Arrayed().
+			Boolean().
+			Description("Verbosity level. Can be multiple. Most verbose: -v -v -v").
+			Build(),
+		commandhelper.
+			NewOption("boolean").
+			Alias("b").
+			Boolean().
+			Build(),
+	)...)
 
 	command := parser.Parse(os.Args)
+	command.Args = helper.FillDefaults(command.Args)
+	errors := helper.VerifyArgs(command.Args)
+	for _, err := range errors {
+		log.Fatalf("%v\n", err)
+	}
+
+	if command.Booleans["boolean"] {
+		println("boolean")
+	}
+
+	verbosityLevel := len(command.Arrayed["verbose"])
+	fmt.Println("verbosityLeveL: ", verbosityLevel)
 
 	port, givenPort := command.Args["port"]
 	if !givenPort {
 		port = "3434"
+	}
+
+	if _, help := command.Args["help"]; help {
+		log.Println("test")
 	}
 
 	headers := http.Header{}

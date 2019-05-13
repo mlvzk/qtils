@@ -144,7 +144,8 @@ func newShowNonprintingProxy(original io.Writer) showNonprintingProxy {
 }
 
 func (proxy showNonprintingProxy) Write(p []byte) (int, error) {
-	buffer := bytes.Buffer{}
+	var buffer bytes.Buffer
+
 	buffer.Grow(len(p))
 	for _, b := range p {
 		if b >= utf8.RuneSelf { // not ascii
