@@ -1,6 +1,7 @@
 package commandhelper_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -9,10 +10,10 @@ import (
 
 func TestVerifyArgs(t *testing.T) {
 	helper := commandhelper.New()
-	helper.EatOption(commandhelper.NewOption("key").Build())
+	helper.EatOption(commandhelper.NewOption("key").Required().Build())
 
-	input := map[string]string{"key": "1", "invalidkey": "1"}
-	expected := []string{"invalidkey"}
+	input := map[string]string{}
+	expected := []error{errors.New("Missing required argument 'key'")}
 
 	if diff := pretty.Compare(helper.VerifyArgs(input), expected); diff != "" {
 		t.Errorf("%s diff:\n%s", t.Name(), diff)

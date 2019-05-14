@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/mlvzk/qtils/commandparser"
 	"github.com/mlvzk/qtils/commandparser/commandhelper"
+	"github.com/pkg/errors"
 )
 
 func main() {
@@ -18,14 +18,14 @@ func main() {
 	helper := commandhelper.New()
 
 	helper.SetName("http")
-	helper.SetVersion("v0.1.0")
+	helper.SetVersion("alpha")
 	helper.AddAuthors("mlvzk")
 
 	parser.AddOption(helper.EatOption(
 		commandhelper.
 			NewOption("port").
 			Alias("p").
-			// Default("3434").
+			Default("3434").
 			Required().
 			Description("Port which the file server will listen on").
 			Build(),
@@ -35,33 +35,23 @@ func main() {
 			Arrayed().
 			Description("Header that will be sent with the request. Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'").
 			Build(),
-		commandhelper.
-			NewOption("verbose").
-			Alias("v").
-			Arrayed().
-			Boolean().
-			Description("Verbosity level. Can be multiple. Most verbose: -v -v -v").
-			Build(),
-		commandhelper.
-			NewOption("boolean").
-			Alias("b").
-			Boolean().
-			Build(),
 	)...)
 
-	command := parser.Parse(os.Args)
+	command, err := parser.Parse(os.Args)
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "failed to parse arguments"))
+	}
+
+	println(command.String())
+
 	command.Args = helper.FillDefaults(command.Args)
-	errors := helper.VerifyArgs(command.Args)
-	for _, err := range errors {
-		log.Fatalf("%v\n", err)
+	errs := helper.VerifyArgs(command.Args)
+	for _, err := range errs {
+		log.Fatalln(err)
 	}
-
-	if command.Booleans["boolean"] {
-		println("boolean")
+	if len(errs) != 0 {
+		return
 	}
-
-	verbosityLevel := len(command.Arrayed["verbose"])
-	fmt.Println("verbosityLeveL: ", verbosityLevel)
 
 	port, givenPort := command.Args["port"]
 	if !givenPort {
@@ -92,14 +82,19 @@ func main() {
 	}
 
 	if len(command.Positionals) == 0 { // listen mode
-		server := http.FileServer(http.Dir("."))
+		dir, err := os.Getwd()
+		if err != nil {
+			log.Fatalln(errors.Wrap(err, "failed to get working directory"))
+		}
+
+		server := http.FileServer(http.Dir(dir))
 		http.Handle("/", server)
 
 		log.Println("Listening on port " + port)
 		http.ListenAndServe(":"+port, nil)
 	} else { // request mode
 		method := "GET"
-		url := ""
+		var url string
 		var reader io.ReadCloser
 
 		switch len(command.Positionals) {
@@ -111,15 +106,15 @@ func main() {
 		case 3: // http GET api.ipify.org ./body.txt
 			method = strings.ToUpper(command.Positionals[0])
 			url = command.Positionals[1]
-			var err error
 
 			filePath := command.Positionals[2]
 			if filePath == "-" {
 				reader = os.Stdin
 			} else {
+				var err error
 				reader, err = os.Open(filePath)
 				if err != nil {
-					log.Fatalf("Error opening the file %v ; Error: %v", filePath, err)
+					log.Fatalln(errors.Wrapf(err, "failed to open file '%s'", filePath))
 				}
 			}
 		}
@@ -130,13 +125,13 @@ func main() {
 
 		request, err := http.NewRequest(method, url, reader)
 		if err != nil {
-			log.Fatalf("Error on creating request object with %v %v ; Error: %v\n", method, url, err)
+			log.Fatalln(errors.Wrapf(err, "failed to create request object with %v %v", method, url))
 		}
 		request.Header = headers
 
 		res, err := http.DefaultClient.Do(request)
 		if err != nil {
-			log.Fatalf("Error on HTTP %v %v ; Error: %v\n", method, url, err)
+			log.Fatalln(errors.Wrapf(err, "failed to send http request with %v %v", method, url))
 		}
 		defer res.Body.Close()
 
@@ -145,7 +140,7 @@ func main() {
 		}
 
 		if _, err := io.Copy(os.Stdout, res.Body); err != nil {
-			log.Fatalf("Error on reading body from HTTP GET %v ; Error: %v\n", command.Positionals[0], err)
+			log.Fatalln(errors.Wrapf(err, "failed to read body from %v %v", res.Request.Method, res.Request.URL.String()))
 		}
 	}
 }

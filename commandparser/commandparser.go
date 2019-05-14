@@ -1,5 +1,7 @@
 package commandparser
 
+import "fmt"
+
 type Command struct {
 	Exe         string
 	Args        map[string]string
@@ -8,7 +10,32 @@ type Command struct {
 	Positionals []string
 }
 
+func (c Command) String() string {
+	res := c.Exe
+
+	for key, value := range c.Args {
+		res += fmt.Sprintf(" --%s '%s'", key, value)
+	}
+
+	for key, arrayedValue := range c.Arrayed {
+		for _, value := range arrayedValue {
+			res += fmt.Sprintf(" --%s '%s'", key, value)
+		}
+	}
+
+	for key := range c.Booleans {
+		res += fmt.Sprintf(" --%s", key)
+	}
+
+	for _, positional := range c.Positionals {
+		res += " " + positional
+	}
+
+	return res
+}
+
 type CommandParser struct {
+	keys     map[string]struct{}
 	booleans []string
 	arrayed  []string
 	aliases  map[string]string
@@ -16,6 +43,7 @@ type CommandParser struct {
 
 func New() *CommandParser {
 	return &CommandParser{
+		map[string]struct{}{},
 		[]string{},
 		[]string{},
 		map[string]string{},
@@ -31,6 +59,7 @@ type Option interface {
 
 func (parser *CommandParser) AddOption(options ...Option) {
 	for _, option := range options {
+		parser.keys[option.GetKey()] = struct{}{}
 		parser.addAliases(option.GetKey(), option.GetAliases()...)
 		if option.IsBoolean() {
 			parser.addBoolean(option.GetKey())
@@ -76,7 +105,7 @@ func (parser *CommandParser) isArrayed(key string) bool {
 	return false
 }
 
-func (parser *CommandParser) Parse(argv []string) *Command {
+func (parser *CommandParser) Parse(argv []string) (*Command, error) {
 	arguments := map[string]string{}
 	positionals := []string{}
 	arrayed := map[string][]string{}
@@ -94,6 +123,10 @@ func (parser *CommandParser) Parse(argv []string) *Command {
 			alias, hasAlias := parser.aliases[key]
 			if hasAlias { // convert aliased key to original key
 				key = alias
+			}
+
+			if _, found := parser.keys[key]; !found {
+				return nil, fmt.Errorf("Invalid key '%s'", key)
 			}
 
 			if parser.isBoolean(key) && parser.isArrayed(key) {
@@ -118,5 +151,5 @@ func (parser *CommandParser) Parse(argv []string) *Command {
 		Arrayed:     arrayed,
 		Booleans:    booleans,
 		Positionals: positionals,
-	}
+	}, nil
 }

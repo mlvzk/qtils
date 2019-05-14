@@ -41,15 +41,12 @@ func (helper *Helper) AddAuthors(author ...string) {
 }
 
 func (helper *Helper) EatOption(options ...OptionSpec) []commandparser.Option {
-	for _, option := range options {
+	parserOptions := make([]commandparser.Option, len(options))
+	for i, option := range options {
 		helper.options = append(helper.options, option.GetKey())
 		helper.defaults[option.GetKey()] = option.GetDefault()
 		helper.details[option.GetKey()] = option.GetDescription()
 		helper.required[option.GetKey()] = option.IsRequired()
-	}
-
-	parserOptions := make([]commandparser.Option, len(options))
-	for i := range options {
 		parserOptions[i] = options[i]
 	}
 
@@ -74,17 +71,6 @@ func (helper *Helper) FillDefaults(args map[string]string) map[string]string {
 
 func (helper *Helper) VerifyArgs(args map[string]string) []error {
 	errs := []error{}
-
-argLoop:
-	for arg := range args {
-		for _, option := range helper.options {
-			if arg == option {
-				continue argLoop
-			}
-		}
-
-		errs = append(errs, fmt.Errorf("Invalid argument '%s'", arg))
-	}
 
 	for requiredKey, requiredValue := range helper.required {
 		if requiredValue == false {
