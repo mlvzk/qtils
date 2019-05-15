@@ -60,27 +60,15 @@ type Option interface {
 func (parser *CommandParser) AddOption(options ...Option) {
 	for _, option := range options {
 		parser.keys[option.GetKey()] = struct{}{}
-		parser.addAliases(option.GetKey(), option.GetAliases()...)
+		for _, t := range option.GetAliases() {
+			parser.aliases[t] = option.GetKey()
+		}
 		if option.IsBoolean() {
-			parser.addBoolean(option.GetKey())
+			parser.booleans = append(parser.booleans, option.GetKey())
 		}
 		if option.IsArrayed() {
-			parser.addArrayed(option.GetKey())
+			parser.arrayed = append(parser.arrayed, option.GetKey())
 		}
-	}
-}
-
-func (parser *CommandParser) addBoolean(key ...string) {
-	parser.booleans = append(parser.booleans, key...)
-}
-
-func (parser *CommandParser) addArrayed(key ...string) {
-	parser.arrayed = append(parser.arrayed, key...)
-}
-
-func (parser *CommandParser) addAliases(from string, to ...string) {
-	for _, t := range to {
-		parser.aliases[t] = from
 	}
 }
 
