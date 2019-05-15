@@ -21,7 +21,7 @@ func main() {
 
 	helper.SetName("cat")
 	helper.SetVersion("alpha")
-	helper.AddAuthors("mlvzk")
+	helper.AddAuthor("mlvzk")
 
 	parser.AddOption(helper.EatOption(
 		commandhelper.

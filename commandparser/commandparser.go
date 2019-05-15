@@ -1,6 +1,6 @@
 package commandparser
 
-import "fmt"
+import "errors"
 
 type Command struct {
 	Exe         string
@@ -14,17 +14,17 @@ func (c Command) String() string {
 	res := c.Exe
 
 	for key, value := range c.Args {
-		res += fmt.Sprintf(" --%s '%s'", key, value)
+		res += " --" + key + " '" + value + "'"
 	}
 
 	for key, arrayedValue := range c.Arrayed {
 		for _, value := range arrayedValue {
-			res += fmt.Sprintf(" --%s '%s'", key, value)
+			res += " --" + key + " '" + value + "'"
 		}
 	}
 
 	for key := range c.Booleans {
-		res += fmt.Sprintf(" --%s", key)
+		res += " --" + key
 	}
 
 	for _, positional := range c.Positionals {
@@ -106,10 +106,12 @@ func (parser *CommandParser) isArrayed(key string) bool {
 }
 
 func (parser *CommandParser) Parse(argv []string) (*Command, error) {
-	arguments := map[string]string{}
-	positionals := []string{}
-	arrayed := map[string][]string{}
-	booleans := map[string]bool{}
+	var (
+		positionals []string
+		arguments   = map[string]string{}
+		arrayed     = map[string][]string{}
+		booleans    = map[string]bool{}
+	)
 
 	for i := 1; i < len(argv); i++ {
 		if argv[i][0] == '-' && len(argv[i]) > 1 {
@@ -126,7 +128,7 @@ func (parser *CommandParser) Parse(argv []string) (*Command, error) {
 			}
 
 			if _, found := parser.keys[key]; !found {
-				return nil, fmt.Errorf("Invalid key '%s'", key)
+				return nil, errors.New("Invalid key '" + key + "'")
 			}
 
 			if parser.isBoolean(key) && parser.isArrayed(key) {

@@ -16,7 +16,7 @@ func main() {
 
 	helper.SetName("tee")
 	helper.SetVersion("alpha")
-	helper.AddAuthors("mlvzk")
+	helper.AddAuthor("mlvzk")
 
 	parser.AddOption(helper.EatOption(
 		commandhelper.

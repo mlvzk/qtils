@@ -1,19 +1,23 @@
 package commandhelper
 
 import (
-	"fmt"
+	"errors"
 
+	"github.com/mlvzk/qtils/color"
 	"github.com/mlvzk/qtils/commandparser"
+	"github.com/mlvzk/qtils/util"
 )
 
 type Helper struct {
-	name     string
-	version  string
-	authors  []string
-	options  []string
-	details  map[string]string
-	defaults map[string]string
-	required map[string]bool
+	name        string
+	version     string
+	authors     []string
+	options     []string
+	usages      []string
+	description map[string]string
+	defaults    map[string]string
+	required    map[string]bool
+	optionSpecs []OptionSpec
 }
 
 func New() *Helper {
@@ -22,9 +26,11 @@ func New() *Helper {
 		"v0.0.0",
 		[]string{},
 		[]string{},
+		[]string{},
 		map[string]string{},
 		map[string]string{},
 		map[string]bool{},
+		[]OptionSpec{},
 	}
 }
 
@@ -36,16 +42,21 @@ func (helper *Helper) SetVersion(version string) {
 	helper.version = version
 }
 
-func (helper *Helper) AddAuthors(author ...string) {
+func (helper *Helper) AddAuthor(author ...string) {
 	helper.authors = append(helper.authors, author...)
+}
+
+func (helper *Helper) AddUsage(usage ...string) {
+	helper.usages = append(helper.usages, usage...)
 }
 
 func (helper *Helper) EatOption(options ...OptionSpec) []commandparser.Option {
 	parserOptions := make([]commandparser.Option, len(options))
 	for i, option := range options {
+		helper.optionSpecs = append(helper.optionSpecs, option)
 		helper.options = append(helper.options, option.GetKey())
 		helper.defaults[option.GetKey()] = option.GetDefault()
-		helper.details[option.GetKey()] = option.GetDescription()
+		helper.description[option.GetKey()] = option.GetDescription()
 		helper.required[option.GetKey()] = option.IsRequired()
 		parserOptions[i] = options[i]
 	}
@@ -78,11 +89,91 @@ func (helper *Helper) VerifyArgs(args map[string]string) []error {
 		}
 
 		if _, exists := args[requiredKey]; !exists {
-			errs = append(errs, fmt.Errorf("Missing required argument '%s'", requiredKey))
+			errs = append(errs, errors.New("Missing required argument '"+requiredKey+"'"))
 		}
 	}
 
 	return errs
+}
+
+// returns longest **individual** columns
+func getLongestColumns(rows [][]string) (longest []int) {
+	for _, r := range rows {
+		for i, c := range r {
+			if len(longest) < (i + 1) {
+				longest = append(longest, len(c))
+			}
+
+			if len(c) > longest[i] {
+				longest[i] = len(c)
+			}
+		}
+	}
+	return
+}
+
+func join(strings []string, sep string) string {
+	var result string
+
+	for i, v := range strings {
+		result += v
+		if i != len(strings)-1 {
+			result += sep
+		}
+	}
+
+	return result
+}
+
+func (helper *Helper) Help() string {
+	var result string
+
+	result = color.Green(helper.name) + " " + helper.version
+
+	if len(helper.usages) != 0 {
+		result += "\n\n" + color.Gold("USAGE:")
+		for _, usage := range helper.usages {
+			result += "\n\t" + usage
+		}
+	}
+
+	if len(helper.optionSpecs) != 0 {
+		var optionRows [][]string
+
+		result += "\n\n" + color.Gold("OPTIONS:")
+		for _, option := range helper.optionSpecs {
+			aliasesStr := join(option.GetAliases(), ", -")
+			if len(option.GetAliases()) != 0 {
+				aliasesStr = ", -" + join(option.GetAliases(), ", -")
+			}
+
+			firstColumn := "--" + option.GetKey() + aliasesStr
+			secondColumn := option.GetDescription()
+			if option.GetDefault() != "" {
+				secondColumn += " (default: " + option.GetDefault() + ")"
+			}
+
+			optionRows = append(optionRows, []string{firstColumn, secondColumn})
+		}
+
+		longestColumns := getLongestColumns(optionRows)
+		padCol := func(column string, index int) string {
+			return util.RightPad(column, " ", longestColumns[index]+4)
+		}
+		for _, row := range optionRows {
+			result += "\n\t" + color.Green(padCol(row[0], 0)) + row[1]
+		}
+	}
+
+	if len(helper.authors) != 0 {
+		if len(helper.authors) == 1 {
+			result += "\n\n" + color.Gold("Author: ") + helper.authors[0]
+		} else {
+			result += "\n\n" + color.Gold("Authors: ") + join(helper.authors, ", ")
+		}
+	}
+
+	return result + "\n"
 }
 
 type OptionSpec interface {
@@ -99,6 +190,7 @@ type OptionBuilder interface {
 	Required() OptionBuilder
 	Arrayed() OptionBuilder
 	Boolean() OptionBuilder
+	// TODO: implement Validate(func)
 	Build() OptionSpec
 }
 

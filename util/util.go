@@ -1,10 +1,19 @@
 package util
 
+// TODO: remove dependency on `strings`
 import "strings"
 
 func LeftPad(s string, padStr string, pLen int) string {
-	return strings.Repeat(padStr, pLen) + s
+	if len(s) >= pLen {
+		return s
+	}
+
+	return strings.Repeat(padStr, pLen-len(s)) + s
 }
 func RightPad(s string, padStr string, pLen int) string {
-	return s + strings.Repeat(padStr, pLen)
+	if len(s) >= pLen {
+		return s
+	}
+
+	return s + strings.Repeat(padStr, pLen-len(s))
 }

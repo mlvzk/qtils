@@ -19,7 +19,7 @@ func main() {
 
 	helper.SetName("http")
 	helper.SetVersion("alpha")
-	helper.AddAuthors("mlvzk")
+	helper.AddAuthor("mlvzk")
 
 	parser.AddOption(helper.EatOption(
 		commandhelper.
