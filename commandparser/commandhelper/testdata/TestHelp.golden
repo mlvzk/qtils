@@ -5,7 +5,8 @@
 	test [OPTIONS]
 
 [33mOPTIONS:[0m
-	[32m--key                   [0mSimple key (default: test)
-	[32m--verbose, -v, -loud    [0mVerbose flag
+	[32m--key <value>           [0mSimple key[36m (default: test)[0m
+	[32m--port <value>          [0mPort the server should listen on[31m (required)[0m
+	[32m--verbose, -v, -loud    [0mVerbose flag[36m (accepts multiple)[0m
 
 [33mAuthors: [0mmlvzk, tester

@@ -131,7 +131,7 @@ func (helper *Helper) Help() string {
 	result = color.Green(helper.name) + " " + helper.version
 
 	if len(helper.usages) != 0 {
-		result += "\n\n" + color.Gold("USAGE:")
+		result += "\n\n" + color.Section("USAGE:")
 		for _, usage := range helper.usages {
 			result += "\n\t" + usage
 		}
@@ -140,7 +140,7 @@ func (helper *Helper) Help() string {
 	if len(helper.optionSpecs) != 0 {
 		var optionRows [][]string
 
-		result += "\n\n" + color.Gold("OPTIONS:")
+		result += "\n\n" + color.Section("OPTIONS:")
 		for _, option := range helper.optionSpecs {
 			aliasesStr := join(option.GetAliases(), ", -")
 			if len(option.GetAliases()) != 0 {
@@ -150,7 +150,16 @@ func (helper *Helper) Help() string {
 			firstColumn := "--" + option.GetKey() + aliasesStr
 			secondColumn := option.GetDescription()
 			if option.GetDefault() != "" {
-				secondColumn += " (default: " + option.GetDefault() + ")"
+				secondColumn += color.Info(" (default: " + option.GetDefault() + ")")
+			}
+			if option.IsRequired() {
+				secondColumn += color.Important(" (required)")
+			}
+			if option.IsArrayed() {
+				secondColumn += color.Info(" (accepts multiple)")
+			}
+			if !option.IsBoolean() {
+				firstColumn += " <value>"
 			}
 
 			optionRows = append(optionRows, []string{firstColumn, secondColumn})
@@ -167,9 +176,9 @@ func (helper *Helper) Help() string {
 
 	if len(helper.authors) != 0 {
 		if len(helper.authors) == 1 {
-			result += "\n\n" + color.Gold("Author: ") + helper.authors[0]
+			result += "\n\n" + color.Section("Author: ") + helper.authors[0]
 		} else {
-			result += "\n\n" + color.Gold("Authors: ") + join(helper.authors, ", ")
+			result += "\n\n" + color.Section("Authors: ") + join(helper.authors, ", ")
 		}
 	}
 

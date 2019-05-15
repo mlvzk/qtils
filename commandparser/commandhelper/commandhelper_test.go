@@ -37,7 +37,8 @@ func TestHelp(t *testing.T) {
 
 	helper.EatOption(
 		commandhelper.NewOption("key").Description("Simple key").Default("test").Build(),
-		commandhelper.NewOption("verbose").Boolean().Alias("v", "loud").Description("Verbose flag").Build(),
+		commandhelper.NewOption("port").Description("Port the server should listen on").Required().Build(),
+		commandhelper.NewOption("verbose").Boolean().Arrayed().Alias("v", "loud").Description("Verbose flag").Build(),
 	)
 
 	got := helper.Help()
