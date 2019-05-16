@@ -64,11 +64,10 @@ func main() {
 		return
 	}
 
+	port := command.Args["port"]
+
 	headers := http.Header{}
-	userHeaders, givenHeaders := command.Arrayed["header"]
-	if !givenHeaders {
-		userHeaders = []string{}
-	}
+	userHeaders := command.Arrayed["header"]
 	for _, userHeader := range userHeaders { // format: 'Key: Value' or 'Key:Value'
 		parts := strings.Split(userHeader, ":")
 		if len(parts) < 2 {
