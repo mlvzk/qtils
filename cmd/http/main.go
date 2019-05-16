@@ -30,7 +30,7 @@ func main() {
 			Required().
 			Validate(func(value string) error {
 				if _, err := strconv.Atoi(value); err != nil {
-					return errors.New("failed to parse provided port. Value can be only numbers")
+					return errors.New("failed to parse provided port. Value can only be numbers")
 				}
 				return nil
 			}).

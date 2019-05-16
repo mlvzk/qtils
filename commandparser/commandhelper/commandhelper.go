@@ -81,7 +81,7 @@ func (helper *Helper) Verify(args map[string]string, arrayed map[string][]string
 				errs = append(errs, errors.New("missing required argument '"+key+"'"))
 			} else if option.IsBoolean() { // booleans can't be required
 			} else {
-				if _, exists := args[key]; !exists {
+				if value, exists := args[key]; !exists || value == "" {
 					errs = append(errs, errors.New("missing required argument '"+key+"'"))
 				}
 			}
