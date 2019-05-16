@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/mlvzk/qtils/commandparser"
@@ -30,12 +29,7 @@ func main() {
 			Alias("p").
 			Default("3434").
 			Required().
-			Validate(func(value string) error {
-				if _, err := strconv.Atoi(value); err != nil {
-					return errors.New("failed to parse provided port. Value can only be numbers")
-				}
-				return nil
-			}).
+			ValidateCompose(commandhelper.ValidateInt).
 			Description("Port which the file server will listen on").
 			Build(),
 		commandhelper.

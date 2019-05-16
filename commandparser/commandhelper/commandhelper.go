@@ -207,6 +207,7 @@ type OptionBuilder interface {
 	Arrayed() OptionBuilder
 	Boolean() OptionBuilder
 	Validate(func(value string) error) OptionBuilder
+	ValidateCompose(func(key string) ValidationFunc) OptionBuilder
 	Build() OptionSpec
 }
 
@@ -220,6 +221,8 @@ type Option struct {
 	boolean      bool
 	validation   func(value string) error
 }
+
+type ValidationFunc func(value string) error
 
 func NewOption(key string) OptionBuilder {
 	return &Option{
@@ -279,6 +282,12 @@ func (option *Option) IsRequired() bool {
 
 func (option *Option) Validate(validation func(value string) error) OptionBuilder {
 	option.validation = validation
+
+	return option
+}
+
+func (option *Option) ValidateCompose(makeValidation func(key string) ValidationFunc) OptionBuilder {
+	option.validation = makeValidation(option.key)
 
 	return option
 }
