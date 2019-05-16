@@ -78,7 +78,9 @@ func TestHelp(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	if diff := pretty.Compare(string(bytes), got); diff != "" {
+	expected := strings.Replace(string(bytes), "\r\n", "\n", -1) // fix for windows CI
+
+	if diff := pretty.Compare(expected, got); diff != "" {
 		t.Errorf("diff:\n%s", diff)
 	}
 }
