@@ -8,7 +8,7 @@ type Command struct {
 	Positionals []string
 }
 
-func (c Command) String() string {
+func (c *Command) String() string {
 	res := c.Exe
 
 	for key, value := range c.Args {
