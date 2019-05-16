@@ -10,24 +10,46 @@ import (
 	"unicode/utf8"
 
 	"github.com/mlvzk/qtils/commandparser"
+	"github.com/mlvzk/qtils/commandparser/commandhelper"
 	"github.com/mlvzk/qtils/util"
+	"github.com/pkg/errors"
 )
 
 func main() {
 	parser := commandparser.New()
-	parser.AddBoolean("show-ends")
-	parser.AddAliases("show-ends", "E")
-	parser.AddBoolean("number")
-	parser.AddAliases("number", "n")
-	parser.AddBoolean("show-nonprinting")
-	parser.AddAliases("show-nonprinting", "v")
-	// TODO: implement cat --squeeze-blank
+	helper := commandhelper.New()
 
-	command := parser.Parse(os.Args)
+	helper.SetName("cat")
+	helper.SetVersion("alpha")
+	helper.AddAuthor("mlvzk")
 
-	_, showEnds := command.Args["show-ends"]
-	_, number := command.Args["number"]
-	_, showNonprinting := command.Args["show-nonprinting"]
+	parser.AddOption(helper.EatOption(
+		commandhelper.
+			NewOption("show-ends").
+			Boolean().
+			Alias("E").
+			Build(),
+		commandhelper.
+			NewOption("number").
+			Boolean().
+			Alias("n").
+			Build(),
+		commandhelper.
+			NewOption("show-nonprinting").
+			Boolean().
+			Alias("v").
+			Build(),
+		// TODO: implement cat --squeeze-blank
+	)...)
+
+	command, err := parser.Parse(os.Args)
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "failed to parse arguments"))
+	}
+
+	showEnds := command.Booleans["show-ends"]
+	number := command.Booleans["number"]
+	showNonprinting := command.Booleans["show-nonprinting"]
 
 	var output io.Writer = os.Stdout
 	if showEnds {
@@ -47,18 +69,18 @@ func main() {
 			file = os.Stdin
 		} else {
 			if file, err = os.Open(arg); err != nil {
-				log.Fatalf("Open file '%s' error: %v\n", arg, err)
+				log.Fatalln(errors.Wrapf(err, "failed to open file '%s'", arg))
 			}
 		}
 
 		if _, err := io.Copy(output, file); err != nil {
-			log.Fatalf("Copying file '%s' error: %v\n", arg, err)
+			log.Fatalln(errors.Wrapf(err, "failed to copy file '%s' to output", arg))
 		}
 	}
 
 	if len(command.Positionals) == 0 {
 		if _, err := io.Copy(output, os.Stdin); err != nil {
-			log.Fatalf("Copying from stdin error: %v\n", err)
+			log.Fatalln(errors.Wrap(err, "failed to copy from standard input to output"))
 		}
 	}
 }
@@ -93,7 +115,7 @@ func (proxy showEndsProxy) Write(p []byte) (int, error) {
 
 	_, err := buffer.WriteTo(proxy.original)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to write to original writer from proxy")
 	}
 
 	return len(p), nil
@@ -144,7 +166,8 @@ func newShowNonprintingProxy(original io.Writer) showNonprintingProxy {
 }
 
 func (proxy showNonprintingProxy) Write(p []byte) (int, error) {
-	buffer := bytes.Buffer{}
+	var buffer bytes.Buffer
+
 	buffer.Grow(len(p))
 	for _, b := range p {
 		if b >= utf8.RuneSelf { // not ascii
@@ -166,7 +189,7 @@ func (proxy showNonprintingProxy) Write(p []byte) (int, error) {
 
 	_, err := buffer.WriteTo(proxy.original)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "failed to write to original writer from proxy")
 	}
 
 	return len(p), nil

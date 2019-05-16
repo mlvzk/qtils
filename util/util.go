@@ -1,10 +1,14 @@
 package util
 
-import "strings"
-
 func LeftPad(s string, padStr string, pLen int) string {
-	return strings.Repeat(padStr, pLen) + s
+	for i := len(s); i < pLen; i++ {
+		s = padStr + s
+	}
+	return s
 }
 func RightPad(s string, padStr string, pLen int) string {
-	return s + strings.Repeat(padStr, pLen)
+	for i := len(s); i < pLen; i++ {
+		s = s + padStr
+	}
+	return s
 }
