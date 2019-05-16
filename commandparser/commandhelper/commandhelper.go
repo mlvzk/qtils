@@ -12,11 +12,7 @@ type Helper struct {
 	name        string
 	version     string
 	authors     []string
-	options     []string
 	usages      []string
-	description map[string]string
-	defaults    map[string]string
-	required    map[string]bool
 	optionSpecs []OptionSpec
 }
 
@@ -26,10 +22,6 @@ func New() *Helper {
 		"v0.0.0",
 		[]string{},
 		[]string{},
-		[]string{},
-		map[string]string{},
-		map[string]string{},
-		map[string]bool{},
 		[]OptionSpec{},
 	}
 }
@@ -54,10 +46,6 @@ func (helper *Helper) EatOption(options ...OptionSpec) []commandparser.Option {
 	parserOptions := make([]commandparser.Option, len(options))
 	for i, option := range options {
 		helper.optionSpecs = append(helper.optionSpecs, option)
-		helper.options = append(helper.options, option.GetKey())
-		helper.defaults[option.GetKey()] = option.GetDefault()
-		helper.description[option.GetKey()] = option.GetDescription()
-		helper.required[option.GetKey()] = option.IsRequired()
 		parserOptions[i] = options[i]
 	}
 
@@ -71,25 +59,45 @@ func (helper *Helper) FillDefaults(args map[string]string) map[string]string {
 		newArgs[k] = v
 	}
 
-	for k, v := range helper.defaults {
-		if _, isSet := newArgs[k]; !isSet {
-			newArgs[k] = v
+	for _, option := range helper.optionSpecs {
+		key := option.GetKey()
+		def := option.GetDefault()
+		if _, isSet := newArgs[key]; !isSet {
+			newArgs[key] = def
 		}
 	}
 
 	return newArgs
 }
 
-func (helper *Helper) VerifyArgs(args map[string]string) []error {
-	errs := []error{}
+func (helper *Helper) Verify(args map[string]string, arrayed map[string][]string) []error {
+	var errs []error
 
-	for requiredKey, requiredValue := range helper.required {
-		if requiredValue == false {
-			continue
+	for _, option := range helper.optionSpecs {
+		key := option.GetKey()
+
+		if option.IsRequired() {
+			if option.IsArrayed() && len(arrayed[key]) == 0 {
+				errs = append(errs, errors.New("missing required argument '"+key+"'"))
+			} else if option.IsBoolean() { // booleans can't be required
+			} else {
+				if _, exists := args[key]; !exists {
+					errs = append(errs, errors.New("missing required argument '"+key+"'"))
+				}
+			}
 		}
 
-		if _, exists := args[requiredKey]; !exists {
-			errs = append(errs, errors.New("Missing required argument '"+requiredKey+"'"))
+		if option.IsArrayed() {
+			for _, value := range arrayed[key] {
+				if err := option.GetValidation()(value); err != nil {
+					errs = append(errs, err)
+				}
+			}
+		} else if option.IsBoolean() {
+		} else {
+			if err := option.GetValidation()(args[key]); err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
 
@@ -189,6 +197,7 @@ type OptionSpec interface {
 	commandparser.Option
 	GetDefault() string
 	GetDescription() string
+	GetValidation() func(value string) error
 	IsRequired() bool
 }
 
@@ -199,7 +208,7 @@ type OptionBuilder interface {
 	Required() OptionBuilder
 	Arrayed() OptionBuilder
 	Boolean() OptionBuilder
-	// TODO: implement Validate(func)
+	Validate(func(value string) error) OptionBuilder
 	Build() OptionSpec
 }
 
@@ -211,6 +220,7 @@ type Option struct {
 	required     bool
 	arrayed      bool
 	boolean      bool
+	validation   func(value string) error
 }
 
 func NewOption(key string) OptionBuilder {
@@ -221,6 +231,7 @@ func NewOption(key string) OptionBuilder {
 		required:     false,
 		arrayed:      false,
 		boolean:      false,
+		validation:   func(value string) error { return nil },
 	}
 }
 
@@ -266,6 +277,16 @@ func (option *Option) Required() OptionBuilder {
 
 func (option *Option) IsRequired() bool {
 	return option.required
+}
+
+func (option *Option) Validate(validation func(value string) error) OptionBuilder {
+	option.validation = validation
+
+	return option
+}
+
+func (option *Option) GetValidation() func(value string) error {
+	return option.validation
 }
 
 func (option *Option) Arrayed() OptionBuilder {

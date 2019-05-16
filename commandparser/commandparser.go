@@ -116,17 +116,23 @@ func (parser *CommandParser) Parse(argv []string) (*Command, error) {
 			}
 
 			if _, found := parser.keys[key]; !found {
-				return nil, errors.New("Invalid key '" + key + "'")
+				return nil, errors.New("invalid key '" + key + "'")
 			}
 
 			if parser.isBoolean(key) && parser.isArrayed(key) {
 				arrayed[key] = append(arrayed[key], "1")
 			} else if parser.isArrayed(key) {
+				if len(argv) <= i+1 {
+					return nil, errors.New("missing value for key '" + key + "'")
+				}
 				arrayed[key] = append(arrayed[key], argv[i+1])
 				i++
 			} else if parser.isBoolean(key) {
 				booleans[key] = true
 			} else {
+				if len(argv) <= i+1 {
+					return nil, errors.New("missing value for key '" + key + "'")
+				}
 				arguments[key] = argv[i+1]
 				i++
 			}

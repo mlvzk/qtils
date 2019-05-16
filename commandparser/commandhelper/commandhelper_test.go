@@ -16,14 +16,28 @@ import (
 
 var update = flag.Bool("update", false, "update .golden files")
 
-func TestVerifyArgs(t *testing.T) {
+func TestVerify(t *testing.T) {
 	helper := commandhelper.New()
-	helper.EatOption(commandhelper.NewOption("key").Required().Build())
+	helper.EatOption(
+		commandhelper.NewOption("key").Required().Build(),
+		commandhelper.NewOption("arrayed_key_required").Arrayed().Required().Build(),
+		commandhelper.NewOption("arrayed_key").Arrayed().Validate(func(value string) error {
+			return errors.New("this shouldn't happen")
+		}).Build(),
+		commandhelper.NewOption("validated_key").Validate(func(value string) error {
+			return errors.New("expected error from validated_key.Validate")
+		}).Build(),
+	)
 
-	input := map[string]string{}
-	expected := []error{errors.New("Missing required argument 'key'")}
+	inputArgs := map[string]string{}
+	inputArrayed := map[string][]string{}
+	expected := []error{
+		errors.New("missing required argument 'key'"),
+		errors.New("missing required argument 'arrayed_key_required'"),
+		errors.New("expected error from validated_key.Validate"),
+	}
 
-	if diff := pretty.Compare(helper.VerifyArgs(input), expected); diff != "" {
+	if diff := pretty.Compare(expected, helper.Verify(inputArgs, inputArrayed)); diff != "" {
 		t.Errorf("%s diff:\n%s", t.Name(), diff)
 	}
 }
@@ -64,7 +78,7 @@ func TestHelp(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	if diff := pretty.Compare(got, string(bytes)); diff != "" {
+	if diff := pretty.Compare(string(bytes), got); diff != "" {
 		t.Errorf("diff:\n%s", diff)
 	}
 }

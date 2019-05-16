@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mlvzk/qtils/commandparser"
@@ -27,12 +28,24 @@ func main() {
 			Alias("p").
 			Default("3434").
 			Required().
+			Validate(func(value string) error {
+				if _, err := strconv.Atoi(value); err != nil {
+					return errors.New("failed to parse provided port. Value can be only numbers")
+				}
+				return nil
+			}).
 			Description("Port which the file server will listen on").
 			Build(),
 		commandhelper.
 			NewOption("header").
 			Alias("H").
 			Arrayed().
+			Validate(func(value string) error {
+				if parts := strings.Split(value, ":"); len(parts) < 2 {
+					return errors.New("invalid header value, missing `:`")
+				}
+				return nil
+			}).
 			Description("Header that will be sent with the request. Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'").
 			Build(),
 	)...)
@@ -45,9 +58,9 @@ func main() {
 	println(command.String())
 
 	command.Args = helper.FillDefaults(command.Args)
-	errs := helper.VerifyArgs(command.Args)
+	errs := helper.Verify(command.Args, command.Arrayed)
 	for _, err := range errs {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	if len(errs) != 0 {
 		return
@@ -91,7 +104,10 @@ func main() {
 		http.Handle("/", server)
 
 		log.Println("Listening on port " + port)
-		http.ListenAndServe(":"+port, nil)
+
+		if err := http.ListenAndServe(":"+port, nil); err != nil {
+			log.Println(errors.Wrap(err, "failed to listen and serve"))
+		}
 	} else { // request mode
 		method := "GET"
 		var url string

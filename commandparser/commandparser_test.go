@@ -46,7 +46,7 @@ func TestParseCommand(t *testing.T) {
 			[]string{"./main", "--invalid"},
 			[]option{},
 			nil,
-			errors.New("Invalid key 'invalid'"),
+			errors.New("invalid key 'invalid'"),
 		},
 		{
 			"with long key",
@@ -300,10 +300,10 @@ func TestParseCommand(t *testing.T) {
 			}
 
 			command, err := parser.Parse(testCase.argv)
-			if diff := pretty.Compare(err, testCase.expectedErr); diff != "" {
+			if diff := pretty.Compare(testCase.expectedErr, err); diff != "" {
 				t.Errorf("%s Error diff:\n%s", t.Name(), diff)
 			}
-			if diff := pretty.Compare(command, testCase.expected); diff != "" {
+			if diff := pretty.Compare(testCase.expected, command); diff != "" {
 				t.Errorf("%s Command diff:\n%s", t.Name(), diff)
 			}
 		})
