@@ -14,18 +14,18 @@ func (e *MissingRequiredError) Error() string {
 	return "missing required argument '" + e.key + "'"
 }
 
-type ValueParsingError struct {
+type InvalidValue struct {
 	key    string
 	suffix string
 }
 
-func NewValueParsingError(key string, suffix string) *ValueParsingError {
-	return &ValueParsingError{
+func NewInvalidValue(key string, information string) *InvalidValue {
+	return &InvalidValue{
 		key:    key,
-		suffix: suffix,
+		suffix: information,
 	}
 }
 
-func (e *ValueParsingError) Error() string {
-	return "missing required argument '" + e.key + "'; " + e.suffix
+func (e *InvalidValue) Error() string {
+	return "invalid value of key '" + e.key + "'; " + e.suffix
 }

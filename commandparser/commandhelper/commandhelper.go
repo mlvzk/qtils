@@ -207,7 +207,7 @@ type OptionBuilder interface {
 	Arrayed() OptionBuilder
 	Boolean() OptionBuilder
 	Validate(func(value string) error) OptionBuilder
-	ValidateCompose(func(key string) ValidationFunc) OptionBuilder
+	ValidateBind(func(key string) ValidationFunc) OptionBuilder
 	Build() OptionSpec
 }
 
@@ -286,7 +286,7 @@ func (option *Option) Validate(validation func(value string) error) OptionBuilde
 	return option
 }
 
-func (option *Option) ValidateCompose(makeValidation func(key string) ValidationFunc) OptionBuilder {
+func (option *Option) ValidateBind(makeValidation func(key string) ValidationFunc) OptionBuilder {
 	option.validation = makeValidation(option.key)
 
 	return option

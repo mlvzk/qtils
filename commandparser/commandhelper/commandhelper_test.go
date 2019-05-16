@@ -84,3 +84,33 @@ func TestHelp(t *testing.T) {
 		t.Errorf("diff:\n%s", diff)
 	}
 }
+
+func TestValidateInt(t *testing.T) {
+	if err := commandhelper.ValidateInt("key123")("abcd"); err == nil {
+		t.Errorf("Expected error but got nil")
+	} else {
+		want := commandhelper.NewInvalidValue("key123", "value must be an integer")
+		if err.Error() != want.Error() {
+			t.Errorf("got != want -> '%+v' != '%+v'", err, want)
+		}
+	}
+
+	if err := commandhelper.ValidateInt("key123")("1234"); err != nil {
+		t.Errorf("Expected error to be nil, but got: '%+v'", err)
+	}
+}
+
+func TestValidateSelection(t *testing.T) {
+	if err := commandhelper.ValidateSelection("apple", "pear", "pie")("key123")("unknown"); err == nil {
+		t.Errorf("Expected error but got nil")
+	} else {
+		want := commandhelper.NewInvalidValue("key123", "value must be one of: apple, pear, pie")
+		if err.Error() != want.Error() {
+			t.Errorf("got != want -> '%+v' != '%+v'", err, want)
+		}
+	}
+
+	if err := commandhelper.ValidateSelection("apple", "pear", "pie")("key123")("pie"); err != nil {
+		t.Errorf("Expected error to be nil, but got: '%+v'", err)
+	}
+}

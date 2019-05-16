@@ -25,11 +25,17 @@ func main() {
 	parser.AddOption(helper.EatOption(
 		commandhelper.NewOption("help").Alias("h").Boolean().Description("Prints this page").Build(),
 		commandhelper.
+			NewOption("protocol").
+			Description("protocol").
+			Required().
+			ValidateBind(commandhelper.ValidateSelection("http", "https", "gopher")).
+			Build(), // TODO: remove this option
+		commandhelper.
 			NewOption("port").
 			Alias("p").
 			Default("3434").
 			Required().
-			ValidateCompose(commandhelper.ValidateInt).
+			ValidateBind(commandhelper.ValidateInt).
 			Description("Port which the file server will listen on").
 			Build(),
 		commandhelper.
