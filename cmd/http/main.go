@@ -58,7 +58,7 @@ func main() {
 	}
 
 	if command.Booleans["help"] {
-		fmt.Printf(helper.Help())
+		fmt.Print(helper.Help())
 		os.Exit(1)
 	}
 
@@ -78,7 +78,7 @@ func main() {
 	for _, userHeader := range userHeaders { // format: 'Key: Value' or 'Key:Value'
 		parts := strings.Split(userHeader, ":")
 		if len(parts) < 2 {
-			log.Fatalf("Invalid header '%v'; Possibly missing ':' (colon)", userHeader)
+			log.Fatalf("Invalid header '%v'; Possibly missing ':' (colon)\n", userHeader)
 		}
 
 		value := userHeader[len(parts[0])+1:]
