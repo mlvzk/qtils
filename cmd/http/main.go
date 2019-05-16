@@ -55,8 +55,6 @@ func main() {
 		log.Fatalln(errors.Wrap(err, "failed to parse arguments"))
 	}
 
-	println(command.String())
-
 	command.Args = helper.FillDefaults(command.Args)
 	errs := helper.Verify(command.Args, command.Arrayed)
 	for _, err := range errs {
