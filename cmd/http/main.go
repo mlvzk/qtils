@@ -64,15 +64,6 @@ func main() {
 		return
 	}
 
-	port, givenPort := command.Args["port"]
-	if !givenPort {
-		port = "3434"
-	}
-
-	if _, help := command.Args["help"]; help {
-		log.Println("test")
-	}
-
 	headers := http.Header{}
 	userHeaders, givenHeaders := command.Arrayed["header"]
 	if !givenHeaders {
