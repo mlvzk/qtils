@@ -33,17 +33,13 @@ func (c Command) String() string {
 }
 
 type CommandParser struct {
-	keys     map[string]struct{}
-	booleans []string
-	arrayed  []string
-	aliases  map[string]string
+	options map[string]Option
+	aliases map[string]string
 }
 
 func New() *CommandParser {
 	return &CommandParser{
-		map[string]struct{}{},
-		[]string{},
-		[]string{},
+		map[string]Option{},
 		map[string]string{},
 	}
 }
@@ -57,38 +53,11 @@ type Option interface {
 
 func (parser *CommandParser) AddOption(options ...Option) {
 	for _, option := range options {
-		parser.keys[option.GetKey()] = struct{}{}
+		parser.options[option.GetKey()] = option
 		for _, t := range option.GetAliases() {
 			parser.aliases[t] = option.GetKey()
 		}
-		if option.IsBoolean() {
-			parser.booleans = append(parser.booleans, option.GetKey())
-		}
-		if option.IsArrayed() {
-			parser.arrayed = append(parser.arrayed, option.GetKey())
-		}
 	}
-}
-
-func (parser *CommandParser) isBoolean(key string) bool {
-	for _, boolKey := range parser.booleans {
-		alias, _ := parser.aliases[key]
-		if boolKey == key || boolKey == alias {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (parser *CommandParser) isArrayed(key string) bool {
-	for _, arrayKey := range parser.arrayed {
-		if arrayKey == key {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (parser *CommandParser) Parse(argv []string) (*Command, error) {
@@ -117,19 +86,20 @@ func (parser *CommandParser) Parse(argv []string) (*Command, error) {
 				key = alias
 			}
 
-			if _, found := parser.keys[key]; !found {
+			option, optionFound := parser.options[key]
+			if !optionFound {
 				return nil, NewInvalidKeyError(key)
 			}
 
-			if parser.isBoolean(key) && parser.isArrayed(key) {
+			if option.IsBoolean() && option.IsArrayed() {
 				arrayed[key] = append(arrayed[key], "1")
-			} else if parser.isArrayed(key) {
+			} else if option.IsArrayed() {
 				if len(argv) <= i+1 {
 					return nil, NewMissingValueError(key)
 				}
 				arrayed[key] = append(arrayed[key], argv[i+1])
 				i++
-			} else if parser.isBoolean(key) {
+			} else if option.IsBoolean() {
 				booleans[key] = true
 			} else {
 				if len(argv) <= i+1 {
