@@ -92,6 +92,10 @@ func (parser *CommandParser) isArrayed(key string) bool {
 }
 
 func (parser *CommandParser) Parse(argv []string) (*Command, error) {
+	if len(argv) == 0 {
+		return nil, EmptyArgvError
+	}
+
 	var (
 		positionals []string
 		arguments   = map[string]string{}

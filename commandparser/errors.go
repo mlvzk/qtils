@@ -1,5 +1,19 @@
 package commandparser
 
+type _error struct {
+	msg string
+}
+
+func NewError(msg string) *_error {
+	return &_error{msg}
+}
+
+func (e *_error) Error() string {
+	return e.msg
+}
+
+var EmptyArgvError = NewError("argument list is empty")
+
 type InvalidKeyError struct {
 	key string
 }
@@ -10,7 +24,7 @@ func NewInvalidKeyError(key string) *InvalidKeyError {
 	}
 }
 
-func (e *InvalidKeyError) Error() string {
+func (e InvalidKeyError) Error() string {
 	return "invalid key '" + e.key + "'"
 }
 

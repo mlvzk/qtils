@@ -41,6 +41,13 @@ func TestParseCommand(t *testing.T) {
 		expectedErr error
 	}{
 		{
+			"with empty argv",
+			[]string{},
+			[]option{},
+			nil,
+			commandparser.EmptyArgvError,
+		},
+		{
 			"with invalid key",
 			[]string{"./main", "--invalid"},
 			[]option{},
