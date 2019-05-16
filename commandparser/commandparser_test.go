@@ -1,7 +1,6 @@
 package commandparser_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -46,7 +45,7 @@ func TestParseCommand(t *testing.T) {
 			[]string{"./main", "--invalid"},
 			[]option{},
 			nil,
-			errors.New("invalid key 'invalid'"),
+			commandparser.NewInvalidKeyError("invalid"),
 		},
 		{
 			"with long key",

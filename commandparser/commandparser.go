@@ -1,7 +1,5 @@
 package commandparser
 
-import "errors"
-
 type Command struct {
 	Exe         string
 	Args        map[string]string
@@ -116,14 +114,14 @@ func (parser *CommandParser) Parse(argv []string) (*Command, error) {
 			}
 
 			if _, found := parser.keys[key]; !found {
-				return nil, errors.New("invalid key '" + key + "'")
+				return nil, NewInvalidKeyError(key)
 			}
 
 			if parser.isBoolean(key) && parser.isArrayed(key) {
 				arrayed[key] = append(arrayed[key], "1")
 			} else if parser.isArrayed(key) {
 				if len(argv) <= i+1 {
-					return nil, errors.New("missing value for key '" + key + "'")
+					return nil, NewMissingValueError(key)
 				}
 				arrayed[key] = append(arrayed[key], argv[i+1])
 				i++
@@ -131,7 +129,7 @@ func (parser *CommandParser) Parse(argv []string) (*Command, error) {
 				booleans[key] = true
 			} else {
 				if len(argv) <= i+1 {
-					return nil, errors.New("missing value for key '" + key + "'")
+					return nil, NewMissingValueError(key)
 				}
 				arguments[key] = argv[i+1]
 				i++

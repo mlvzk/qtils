@@ -1,8 +1,6 @@
 package commandhelper
 
 import (
-	"errors"
-
 	"github.com/mlvzk/qtils/color"
 	"github.com/mlvzk/qtils/commandparser"
 	"github.com/mlvzk/qtils/util"
@@ -78,11 +76,11 @@ func (helper *Helper) Verify(args map[string]string, arrayed map[string][]string
 
 		if option.IsRequired() {
 			if option.IsArrayed() && len(arrayed[key]) == 0 {
-				errs = append(errs, errors.New("missing required argument '"+key+"'"))
+				errs = append(errs, NewMissingRequiredError(key))
 			} else if option.IsBoolean() { // booleans can't be required
 			} else {
 				if value, exists := args[key]; !exists || value == "" {
-					errs = append(errs, errors.New("missing required argument '"+key+"'"))
+					errs = append(errs, NewMissingRequiredError(key))
 				}
 			}
 		}
