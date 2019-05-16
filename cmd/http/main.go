@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -23,6 +24,7 @@ func main() {
 	helper.AddAuthor("mlvzk")
 
 	parser.AddOption(helper.EatOption(
+		commandhelper.NewOption("help").Alias("h").Boolean().Description("Prints this page").Build(),
 		commandhelper.
 			NewOption("port").
 			Alias("p").
@@ -53,6 +55,11 @@ func main() {
 	command, err := parser.Parse(os.Args)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "failed to parse arguments"))
+	}
+
+	if command.Booleans["help"] {
+		fmt.Printf(helper.Help())
+		os.Exit(1)
 	}
 
 	command.Args = helper.FillDefaults(command.Args)
