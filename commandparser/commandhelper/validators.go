@@ -1,10 +1,16 @@
 package commandhelper
 
 func ValidateInt(key string) ValidationFunc {
+	err := NewInvalidValue(key, "value must be an integer")
+
 	return ValidationFunc(func(value string) error {
-		for _, c := range value {
+		if len(value) > 0 && !(value[0] == '-' || (value[0] >= '0' && value[0] <= '9')) {
+			return err
+		}
+
+		for _, c := range value[1:] {
 			if c < '0' || c > '9' {
-				return NewInvalidValue(key, "value must be an integer")
+				return err
 			}
 		}
 		return nil

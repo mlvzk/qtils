@@ -27,18 +27,15 @@ func main() {
 		commandhelper.
 			NewOption("show-ends").
 			Boolean().
-			Alias("E").
-			Build(),
+			Alias("E"),
 		commandhelper.
 			NewOption("number").
 			Boolean().
-			Alias("n").
-			Build(),
+			Alias("n"),
 		commandhelper.
 			NewOption("show-nonprinting").
 			Boolean().
-			Alias("v").
-			Build(),
+			Alias("v"),
 		// TODO: implement cat --squeeze-blank
 	)...)
 

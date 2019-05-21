@@ -22,8 +22,7 @@ func main() {
 		commandhelper.
 			NewOption("append").
 			Alias("a").
-			Boolean().
-			Build(),
+			Boolean(),
 	)...)
 
 	command, _ := parser.Parse(os.Args)

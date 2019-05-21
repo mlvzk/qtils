@@ -40,11 +40,12 @@ func (helper *Helper) AddUsage(usage ...string) {
 	helper.usages = append(helper.usages, usage...)
 }
 
-func (helper *Helper) EatOption(options ...OptionSpec) []commandparser.Option {
+func (helper *Helper) EatOption(options ...OptionBuilder) []commandparser.Option {
 	parserOptions := make([]commandparser.Option, len(options))
-	for i, option := range options {
+	for i, optionBuilder := range options {
+		option := optionBuilder.Build()
 		helper.optionSpecs = append(helper.optionSpecs, option)
-		parserOptions[i] = options[i]
+		parserOptions[i] = option
 	}
 
 	return parserOptions

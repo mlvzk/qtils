@@ -23,21 +23,20 @@ func main() {
 	helper.AddAuthor("mlvzk")
 
 	parser.AddOption(helper.EatOption(
-		commandhelper.NewOption("help").Alias("h").Boolean().Description("Prints this page").Build(),
+		commandhelper.NewOption("help").Alias("h").Boolean().Description("Prints this page"),
 		commandhelper.
 			NewOption("protocol").
 			Description("protocol").
 			Required().
-			ValidateBind(commandhelper.ValidateSelection("http", "https", "gopher")).
-			Build(), // TODO: remove this option
+			ValidateBind(commandhelper.ValidateSelection("http", "https", "gopher")),
+		// TODO: remove this option
 		commandhelper.
 			NewOption("port").
 			Alias("p").
 			Default("3434").
 			Required().
 			ValidateBind(commandhelper.ValidateInt).
-			Description("Port which the file server will listen on").
-			Build(),
+			Description("Port which the file server will listen on"),
 		commandhelper.
 			NewOption("header").
 			Alias("H").
@@ -48,8 +47,7 @@ func main() {
 				}
 				return nil
 			}).
-			Description("Header that will be sent with the request. Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'").
-			Build(),
+			Description("Header that will be sent with the request. Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'"),
 	)...)
 
 	command, err := parser.Parse(os.Args)

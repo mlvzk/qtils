@@ -19,14 +19,14 @@ var update = flag.Bool("update", false, "update .golden files")
 func TestVerify(t *testing.T) {
 	helper := commandhelper.New()
 	helper.EatOption(
-		commandhelper.NewOption("key").Required().Build(),
-		commandhelper.NewOption("arrayed_key_required").Arrayed().Required().Build(),
+		commandhelper.NewOption("key").Required(),
+		commandhelper.NewOption("arrayed_key_required").Arrayed().Required(),
 		commandhelper.NewOption("arrayed_key").Arrayed().Validate(func(value string) error {
 			return errors.New("this shouldn't happen")
-		}).Build(),
+		}),
 		commandhelper.NewOption("validated_key").Validate(func(value string) error {
 			return errors.New("expected error from validated_key.Validate")
-		}).Build(),
+		}),
 	)
 
 	inputArgs := map[string]string{}
@@ -50,9 +50,9 @@ func TestHelp(t *testing.T) {
 	helper.AddAuthor("mlvzk", "tester")
 
 	helper.EatOption(
-		commandhelper.NewOption("key").Description("Simple key").Default("test").Build(),
-		commandhelper.NewOption("port").Description("Port the server should listen on").Required().Build(),
-		commandhelper.NewOption("verbose").Boolean().Arrayed().Alias("v", "loud").Description("Verbose flag").Build(),
+		commandhelper.NewOption("key").Description("Simple key").Default("test"),
+		commandhelper.NewOption("port").Description("Port the server should listen on").Required(),
+		commandhelper.NewOption("verbose").Boolean().Arrayed().Alias("v", "loud").Description("Verbose flag"),
 	)
 
 	got := helper.Help()
