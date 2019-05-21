@@ -200,6 +200,8 @@ type OptionSpec interface {
 	IsRequired() bool
 }
 
+type ValidationBind func(key string) ValidationFunc
+
 type OptionBuilder interface {
 	Alias(key ...string) OptionBuilder
 	Default(value string) OptionBuilder
@@ -208,7 +210,7 @@ type OptionBuilder interface {
 	Arrayed() OptionBuilder
 	Boolean() OptionBuilder
 	Validate(func(value string) error) OptionBuilder
-	ValidateBind(func(key string) ValidationFunc) OptionBuilder
+	ValidateBind(...ValidationBind) OptionBuilder
 	Build() OptionSpec
 }
 
@@ -287,8 +289,15 @@ func (option *Option) Validate(validation func(value string) error) OptionBuilde
 	return option
 }
 
-func (option *Option) ValidateBind(makeValidation func(key string) ValidationFunc) OptionBuilder {
-	option.validation = makeValidation(option.key)
+func (option *Option) ValidateBind(binders ...ValidationBind) OptionBuilder {
+	option.validation = func(value string) error {
+		for _, binder := range binders {
+			if err := binder(option.key)(value); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 
 	return option
 }

@@ -27,14 +27,20 @@ func TestVerify(t *testing.T) {
 		commandhelper.NewOption("validated_key").Validate(func(value string) error {
 			return errors.New("expected error from validated_key.Validate")
 		}),
+		commandhelper.NewOption("accepts_kv").ValidateBind(commandhelper.ValidateKeyValue("=")),
+		commandhelper.NewOption("accepts_kv_invalid").ValidateBind(commandhelper.ValidateKeyValue(" = ")),
 	)
 
-	inputArgs := map[string]string{}
+	inputArgs := map[string]string{
+		"accepts_kv":         "k=v",
+		"accepts_kv_invalid": "test",
+	}
 	inputArrayed := map[string][]string{}
 	expected := []error{
 		errors.New("missing required argument 'key'"),
 		errors.New("missing required argument 'arrayed_key_required'"),
 		errors.New("expected error from validated_key.Validate"),
+		errors.New("invalid value of key 'accepts_kv_invalid'; value does not contain the ' = ' delimiter"),
 	}
 
 	if diff := pretty.Compare(expected, helper.Verify(inputArgs, inputArrayed)); diff != "" {

@@ -1,5 +1,17 @@
 package commandhelper
 
+type _error struct {
+	msg string
+}
+
+func NewError(msg string) *_error {
+	return &_error{msg}
+}
+
+func (e *_error) Error() string {
+	return e.msg
+}
+
 type MissingRequiredError struct {
 	key string
 }
