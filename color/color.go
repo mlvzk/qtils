@@ -2,9 +2,11 @@ package color
 
 const escape = "\x1b"
 
-var Important = Maroon
-var Section = Olive
-var Info = Cyan
+var (
+	Important = Maroon
+	Section   = Olive
+	Info      = Cyan
+)
 
 func LightGoldenrod2(str string) string {
 	return escape + "[252m" + str + escape + "[0m"
