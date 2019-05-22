@@ -59,6 +59,8 @@ func TestHelp(t *testing.T) {
 		commandhelper.NewOption("key").Description("Simple key").Default("test"),
 		commandhelper.NewOption("port").Description("Port the server should listen on").Required(),
 		commandhelper.NewOption("verbose").Boolean().Arrayed().Alias("v", "loud").Description("Verbose flag"),
+		commandhelper.NewOption("multiline_description").Description(`this is a
+multiline description`),
 	)
 
 	got := helper.Help()
@@ -88,6 +90,47 @@ func TestHelp(t *testing.T) {
 
 	if diff := pretty.Compare(expected, got); diff != "" {
 		t.Errorf("diff:\n%s", diff)
+	}
+}
+
+func BenchmarkHelp(b *testing.B) {
+	helper := commandhelper.New()
+	helper.SetName("test")
+	helper.SetVersion("v0.0.0")
+	helper.AddUsage("test [OPTIONS] <positionals...>", "test [OPTIONS]")
+	helper.AddAuthor("mlvzk", "tester")
+
+	helper.EatOption(
+		commandhelper.NewOption("key").Description("Simple key").Default("test"),
+		commandhelper.NewOption("port").Description("Port the server should listen on").Required(),
+		commandhelper.NewOption("verbose").Boolean().Arrayed().Alias("v", "loud").Description("Verbose flag"),
+		commandhelper.NewOption("multiline_description").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description1").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description2").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description3").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description4").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description5").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description6").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description7").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description8").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description9").Description(`this is a
+multiline description`),
+		commandhelper.NewOption("multiline_description10").Description(`this is a
+multiline description`),
+	)
+
+	b.ResetTimer()
+	for i := 0; i < 1000; i++ {
+		helper.Help()
 	}
 }
 

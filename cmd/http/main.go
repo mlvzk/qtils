@@ -47,7 +47,8 @@ func main() {
 				}
 				return nil
 			}).
-			Description("Header that will be sent with the request. Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'"),
+			Description(`Header that will be sent with the request.
+Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'`),
 	)...)
 
 	command, err := parser.Parse(os.Args)

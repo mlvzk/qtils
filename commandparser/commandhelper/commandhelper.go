@@ -140,7 +140,7 @@ func (helper *Helper) Help() string {
 	if len(helper.usages) != 0 {
 		result += "\n\n" + color.Section("USAGE:")
 		for _, usage := range helper.usages {
-			result += "\n\t" + usage
+			result += "\n    " + usage
 		}
 	}
 
@@ -177,7 +177,18 @@ func (helper *Helper) Help() string {
 			return util.RightPad(column, " ", longestColumns[index]+4)
 		}
 		for _, row := range optionRows {
-			result += "\n\t" + color.Green(padCol(row[0], 0)) + row[1]
+			desc := row[1]
+			result += "\n    " + color.Green(padCol(row[0], 0))
+			last := 0
+			for i, c := range desc {
+				if c == '\n' {
+					result += desc[last:i] + "\n    " + padCol("", 0)
+					last = i + 1
+				}
+			}
+			if last < len(desc) {
+				result += desc[last:]
+			}
 		}
 	}
 
