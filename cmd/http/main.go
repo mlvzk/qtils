@@ -25,12 +25,6 @@ func main() {
 	parser.AddOption(helper.EatOption(
 		commandhelper.NewOption("help").Alias("h").Boolean().Description("Prints this page"),
 		commandhelper.
-			NewOption("protocol").
-			Description("protocol").
-			Required().
-			ValidateBind(commandhelper.ValidateSelection("http", "https", "gopher")),
-		// TODO: remove this option
-		commandhelper.
 			NewOption("port").
 			Alias("p").
 			Default("3434").
