@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/armon/go-socks5"
 	"github.com/mlvzk/qtils/commandparser"
 	"github.com/mlvzk/qtils/commandparser/commandhelper"
 	"github.com/pkg/errors"
@@ -30,7 +31,7 @@ func main() {
 			Default("3434").
 			Required().
 			ValidateBind(commandhelper.ValidateInt).
-			Description("Port which the file server will listen on"),
+			Description("Port which the file/proxy server will listen on"),
 		commandhelper.
 			NewOption("header").
 			Alias("H").
@@ -97,6 +98,18 @@ Can be multiple: -H 'Content-Type: application/json' -H 'Something: 1'`),
 			log.Println(errors.Wrap(err, "failed to listen and serve"))
 		}
 	} else { // request mode
+		if command.Positionals[0] == "proxy" {
+			server, err := socks5.New(&socks5.Config{})
+			if err != nil {
+				log.Fatalln(errors.Wrap(err, "failed to create a socks5 server"))
+			}
+
+			log.Println("Proxy(socks5) is listening on port :" + port)
+			if err := server.ListenAndServe("tcp", ":"+port); err != nil {
+				log.Fatalln(errors.Wrap(err, "failed to listen and serve socks5 on port :"+port))
+			}
+		}
+
 		method := "GET"
 		var url string
 		var reader io.ReadCloser
